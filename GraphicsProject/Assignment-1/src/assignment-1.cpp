@@ -283,6 +283,51 @@ std::vector<glm::vec3> GenererateTestLine(int xstart, int ystart, int xstop, int
     return vertices;
 }
 
+void drawline(int x1, int y1, int x2, int y2, std::vector<glm::vec3>& pixels) 
+{
+  float d;
+  int dx = x2 - x1;
+  int abs_2dx = std::abs(dx) << 1; // 2 * |dx|
+  int x_step = (dx < 0) ? -1 : 1; // sign of dx
+  int dy = y2 - y1;
+  int abs_2dy = std::abs(dy) << 1; // 2 * |dy|
+  int y_step = (dy < 0) ? -1 : 1; // sign og dy
+  bool x_dominant = (abs_2dx > abs_2dy);
+  int x = x1; // The running x is initialized to x1
+  int y = y1; // The running y is initialized to y1
+
+  if (x_dominant) {
+    d = abs_2dy - (abs_2dx >> 1); // 2 * |dy| - |dx|
+      for (;;) {
+        glm::vec3 point = glm::vec3(float(x), float(y), 0.0f);
+        pixels.push_back(point);
+        //set_dot(x, y);
+        if (x == x2) return;
+        if (d >= 0) {
+          y += y_step;
+          d -= abs_2dx;
+        }
+        x += x_step;
+        d += abs_2dy;
+      }
+  }
+  else {
+    d = abs_2dx - (abs_2dy >> 1); // 2 * |dx| - |dy|
+    for (;;) {
+      glm::vec3 point = glm::vec3(float(x), float(y), 0.0f);
+      pixels.push_back(point);
+      if (y == y2) return;
+      if (d >= 0) {
+        x += x_step;
+        d -= abs_2dy;
+      }
+      y += y_step;
+      d += abs_2dx;
+    }
+  }
+}
+
+
 /**
  * Scanconverts a straight line, i.e. computes the pixels that represents the approximated straight line.
  * \param x1 - the x-coordinate of the start point.
@@ -306,6 +351,8 @@ std::vector<glm::vec3> GenerateLinePixels(int x1, int y1, int x2, int y2)
         
         glm::vec3 endpoint = glm::vec3(float(x2), float(y2), 0.0f);
         pixels.push_back(endpoint);
+
+        drawline(x1, y1, x2, y2, pixels);
     }
     return pixels;
 }
