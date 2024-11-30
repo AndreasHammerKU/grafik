@@ -25,7 +25,6 @@ fi
 
 # Remove the build directory
 cd ..
-rm -rf build
 
 # Notify user of successful completion
 echo "Build completed successfully. Executables are located in the 'bin' folder."
