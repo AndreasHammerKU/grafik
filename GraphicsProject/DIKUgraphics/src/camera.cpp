@@ -466,7 +466,7 @@ void Camera::ComputeViewOrientation(glm::vec3& vrp, glm::vec3& vpn, glm::vec3& v
 {
  glm::vec3 n = glm::normalize(vpn);
  glm::vec3 u = glm::normalize(glm::cross(vup, n));
- glm::vec3 v = glm::cross(n, u);
+ glm::vec3 v = glm::normalize(glm::cross(n, u));
 
  glm::mat4x4 orientation = glm::mat4x4(1.0f);
  orientation[0] = glm::vec4(u, 0.0f);
@@ -498,19 +498,14 @@ void Camera::ComputeViewProjection(glm::vec3& prp,
 
     float centerX = (lower_left_window.x + upper_right_window.x) / 2.0f;
     float centerY = (lower_left_window.y + upper_right_window.y) / 2.0f;
-    glm::mat4x4 Sh_per = glm::mat4x4(1.0f);
     glm::vec3 cw = glm::vec3(centerX, centerY, 0.0f);
     glm::vec3 dop = prp - cw;
-    Sh_per[2][0] = - dop.x / dop.z;
-    Sh_per[2][1] = - dop.y / dop.z;
+    glm::mat4x4 Sh_per = glm::shearXY(-(dop.x / dop.z), -(dop.y / dop.z));
 
     float width = upper_right_window.x - lower_left_window.x;
     float height = upper_right_window.y - lower_left_window.y;
 
-    glm::mat4x4 S_per = glm::mat4x4(1.0f);
-    S_per[0][0] = -2*prp.z / (width * back_clipping_plane);
-    S_per[1][1] = -2*prp.z / (height * back_clipping_plane);
-    S_per[2][2] = -1 / (back_clipping_plane);
+    glm::mat4x4 S_per = glm::scale(-2*prp.z / (width * back_clipping_plane),-2*prp.z / (height * back_clipping_plane), -1 / (back_clipping_plane));
 
     glm::mat4x4 M_perpar = glm::mat4x4(1.0f);
     M_perpar[2][2] = 1 / ( 1 + front_clipping_plane);
