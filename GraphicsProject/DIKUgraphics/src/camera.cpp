@@ -475,9 +475,6 @@ void Camera::ComputeViewOrientation(glm::vec3& vrp, glm::vec3& vpn, glm::vec3& v
 
   glm::mat4x4 translation = glm::translate(-vrp);
 
-  std::cout << "Translation" << translation << std::endl;
-
-  std::cout << "Rotation" << orientation << std::endl;
   this->vieworientationmatrix = orientation * translation;
   this->invvieworientationmatrix = glm::translate(vrp) * glm::transpose(orientation);
 }

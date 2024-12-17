@@ -11,8 +11,6 @@ out vec3 WorldNormal;
 void main() {
     WorldVertex = Vertex;
     WorldNormal = Normal;
-    
-    // Implement your vertex program here - it must have CTM from the camera.
   
-    gl_Position = vec4(0.0f, 0.0f, 0.0f, 1.0f); 	
+    gl_Position = CTM * vec4(Vertex, 1.0f); 	
 }
