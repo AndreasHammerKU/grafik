@@ -46,7 +46,24 @@ glm::mat4x4 DRB;
  */
 void Sample(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
 {
-    std::cout << "Sample(BezierRow&, int, std::vector<glm::vec3>&): Not implemented yet!" << std::endl;
+    float t1 = 0.0f;
+    float t2 = 0.0f;
+    float t3 = 0.0f;
+    float delta_t = 1.0f / float(N-1);
+    glm::vec4 T(0.0f);
+
+    glm::vec3 vertex;
+    Vertices.push_back(G[1]);
+    for (int i = 2; i < N; ++i) {
+      t1 += delta_t;
+      t2 = t1 * t1;
+      t3 = t2 * t1;
+      T = glm::vec4(t3, t2, t1, 1.0f);
+      vertex = G * BasisMatrix * T;
+      Vertices.push_back(vertex);
+      Vertices.push_back(vertex);
+    }
+    Vertices.push_back(G[4]);
 }
 
 
@@ -58,7 +75,24 @@ void Sample(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
  */
 void SampleFWD(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
 {
-    std::cout << "SampleFWD(BezierRow&, int, std::vector<glm::vec3>&): Not implemented yet!" << std::endl;
+    float delta1 = 1.0f/ float(N-1);
+    float delta2 = delta1 * delta1;
+    float delta3 = delta2 * delta1;
+    BezierRow coefficients = G * BasisMatrix;
+    BezierRow F(coefficients[4],
+                coefficients[1] * delta3 + coefficients[2] * delta2 + coefficients[3] * delta1,
+                6.0f * coefficients[1] * delta3 + 2.0f * coefficients[2] * delta2,
+                6.0f * coefficients[1] * delta3);
+
+    Vertices.push_back(G[1]);
+    for (int i = 2; i < N; ++i) {
+      F[1] += F[2];
+      F[2] += F[3];
+      F[3] += F[4];
+      Vertices.push_back(F[1]);
+      Vertices.push_back(F[1]);
+    }
+    Vertices.push_back(G[4]);
 }
 
 /**
@@ -69,7 +103,14 @@ void SampleFWD(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
  */
 void SubDivide(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
 {
-    std::cout << "SubDivide(BezierRow&, int, std::vector<glm::vec3>&): Not implemented yet!" << std::endl;
+  if (N == 0) {
+    Vertices.push_back(G[1]);
+    Vertices.push_back(G[4]);
+  }
+  else {
+    SubDivide(G * DLB, N - 1, Vertices);
+    SubDivide(G * DRB, N - 1, Vertices);
+  }
 }
 
 /**
@@ -79,7 +120,34 @@ void SubDivide(BezierRow const& G, int N, std::vector<glm::vec3>& Vertices)
  */
 bool Flatness(BezierRow const& G, float epsilon)
 {
-   std::cout << "Flatness(BezierRow&, float): Not implemented yet!" << std::endl;
+   glm::vec3 G1G4(G[4] - G[1]);
+   glm::vec3 G1G2(G[2] - G[1]);
+   glm::vec3 G4G3(G[3] - G[4]);
+   glm::vec3 u = glm::normalize(G1G4);
+   float l = glm::length(G1G4);
+   float d1 = glm::length(G1G2 - glm::dot(G1G2, u)* u); 
+   float d2 = glm::length(G4G3 - glm::dot(G4G3, u)* u); 
+   if (l < epsilon){
+     return false;
+   }
+   if (glm::dot(G1G2, u) < 0) {
+     return false;
+   }
+   if (glm::dot(G4G3, u) > 0) {
+     return false;
+   }
+   if (glm::dot(G1G2, u) > l) {
+     return false;
+   }
+   if (-glm::dot(G4G3, u) > l) {
+     return false;
+   }
+   if (d1 > epsilon) {
+     return false;
+   }
+   if (d2 > epsilon) {
+     return false;
+   }
  
     return true;
 }
@@ -93,7 +161,14 @@ bool Flatness(BezierRow const& G, float epsilon)
  */
 void SubDivide(BezierRow const& G, float epsilon, std::vector<glm::vec3>& Vertices, int N)
 {
-    std::cout << "SubDivide(BezierRow&, float, std::vector<glm::vec3>&, int): Not implemented yet!" << std::endl;
+   if (Flatness(G, epsilon) || N == 0) {
+     Vertices.push_back(G[1]);
+     Vertices.push_back(G[4]);
+   }
+   else {
+     SubDivide(G * DLB, N-1, Vertices);
+     SubDivide(G * DRB, N-1, Vertices);
+   }
 }
 
 /**
