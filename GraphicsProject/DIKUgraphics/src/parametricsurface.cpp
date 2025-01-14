@@ -323,8 +323,90 @@ void ParametricSurface::DataHasChanged(bool datachanged)
 void ParametricSurface::SampleSurface()
 {
     Trace("ParametricSurface", "SampleSurface()");
+    this->vertices.clear();
+    this->normals.clear();
 
-    std::cout << "ParametricSurface::SampleSurface(): Not implemented yet!" << std::endl;
+    glm::vec3 V_lower_left; glm::vec3 N_lower_left;
+    glm::vec3 V_lower_right; glm::vec3 N_lower_right;
+    glm::vec3 V_upper_right; glm::vec3 N_upper_right;
+    glm::vec3 V_upper_left; glm::vec3 N_upper_left;
+
+    float u_lower_left = this->umin;
+    float u_lower_right = u_lower_left + this->delta_u;
+    float u_upper_right = u_lower_right;
+    float u_upper_left = u_lower_left;
+
+    for (int m = 1; m <= this->M; ++m) {
+      float v_lower_left = this->vmin;
+      float v_lower_right = v_lower_left;
+      float v_upper_right = v_lower_right + this->delta_v;
+      float v_upper_left = v_upper_right;
+
+      for (int n = 1; n <= this->N; ++n) {
+        V_lower_left = this->Vertex(u_lower_left, v_lower_left);
+        N_lower_left = this->Normal(u_lower_left, v_lower_left);
+
+        V_lower_right = this->Vertex(u_lower_right, v_lower_right);
+        N_lower_right = this->Normal(u_lower_right, v_lower_right);
+
+        V_upper_right = this->Vertex(u_upper_right, v_upper_right);
+        N_upper_right = this->Normal(u_upper_right, v_upper_right);
+
+        V_upper_left = this->Vertex(u_upper_left, v_upper_left);
+        N_upper_left = this->Normal(u_upper_left, v_upper_left);
+
+        if (this->frontfacing) {
+          this->CreateFrontFacingData(
+              V_lower_left,
+              V_lower_right,
+              V_upper_right,
+              V_upper_left,
+              this->vertices,
+              N_lower_left,
+              N_lower_right,
+              N_upper_right,
+              N_upper_left,
+              this->normals
+              );
+        } 
+        else {
+          this->CreateBackFacingData(
+              V_lower_left,
+              V_lower_right,
+              V_upper_right,
+              V_upper_left,
+              this->vertices,
+              N_lower_left,
+              N_lower_right,
+              N_upper_right,
+              N_upper_left,
+              this->normals
+              );
+        }
+
+        if ((this->debug) && (n < this->N)) {
+          n += 1;
+          v_upper_left += this->delta_v;
+          v_upper_right = v_upper_left;
+        }
+
+        v_lower_left = v_upper_left;
+        v_lower_right = v_upper_right;
+        v_upper_left = (n == this->N) ? this->vmax : v_lower_left + this->delta_v;
+        v_upper_right = v_upper_left;
+      }
+
+      if ((this->debug) && (m < this->M)) {
+        m += 1;
+        u_upper_right += delta_u;
+        u_lower_right = u_upper_right;
+      }
+      
+      u_lower_left = u_lower_right;
+      u_upper_left = u_upper_right;
+      u_lower_right = (m == this->M) ? this->umax : u_lower_left + this->delta_u;
+      u_upper_right = u_lower_right;
+    }
     
     this->validdata = true;
 }

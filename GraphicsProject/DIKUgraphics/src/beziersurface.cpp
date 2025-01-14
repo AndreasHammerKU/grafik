@@ -391,7 +391,53 @@ void BezierSurface::PrintIndexMatrix(int PatchNumber,
  */
 void BezierSurface::subdivide_bezierpatch(BezierPatch const& G, int level)
 {
-    std::cout << "BezierSurface::subdivide_bezierpatch(BezierPatch&, int): Not implemented yet!" << std::endl;
+    if (level == 0) {
+      glm::vec3 N_11 = glm::cross(G[2][1] - G[1][1], G[1][2] - G[1][1]);
+      glm::vec3 N_14 = glm::cross(G[1][3] - G[1][4], G[2][4] - G[1][4]);
+      glm::vec3 N_41 = glm::cross(G[4][2] - G[4][1], G[3][1] - G[4][1]);
+      glm::vec3 N_44 = glm::cross(G[3][4] - G[4][4], G[4][3] - G[4][4]);
+
+      if (this->frontfacing) {
+        this->vertices.push_back(G[1][1]);
+        this->normals.push_back(N_11);
+        this->vertices.push_back(G[4][1]);
+        this->normals.push_back(N_41);
+        this->vertices.push_back(G[1][4]);
+        this->normals.push_back(N_14);
+
+        this->vertices.push_back(G[4][1]);
+        this->normals.push_back(N_41);
+        this->vertices.push_back(G[4][4]);
+        this->normals.push_back(N_44);
+        this->vertices.push_back(G[1][4]);
+        this->normals.push_back(N_14);
+
+      } else {
+
+        this->vertices.push_back(G[1][1]);
+        this->normals.push_back(-N_11);
+        this->vertices.push_back(G[1][4]);
+        this->normals.push_back(-N_14);
+        this->vertices.push_back(G[4][1]);
+        this->normals.push_back(-N_41);
+
+        this->vertices.push_back(G[1][4]);
+        this->normals.push_back(-N_14);
+        this->vertices.push_back(G[4][4]);
+        this->normals.push_back(-N_44);
+        this->vertices.push_back(G[4][1]);
+        this->normals.push_back(-N_41);
+      }
+    } else {
+      BezierPatch G11 = glm::transpose(DBL) * G * DBL;
+      this->subdivide_bezierpatch(G11, level-1);
+      BezierPatch G12 = glm::transpose(DBR) * G * DBL;
+      this->subdivide_bezierpatch(G12, level-1);
+      BezierPatch G21 = glm::transpose(DBL) * G * DBR;
+      this->subdivide_bezierpatch(G21, level-1);
+      BezierPatch G22 = glm::transpose(DBR) * G * DBR;
+      this->subdivide_bezierpatch(G22, level-1);
+    }
 }
 
 /*
